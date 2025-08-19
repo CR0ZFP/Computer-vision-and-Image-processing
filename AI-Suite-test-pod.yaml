@@ -1,0 +1,72 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ai-suite-test
+  namespace: default
+  labels: {}
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      name: ai-suite-test
+      labels:
+        app: ai-suite-test
+        version: v1
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ai-suit-test-container
+          image: 100.125.7.25:20202/container/ai-suite-test:latest
+          imagePullPolicy: IfNotPresent
+          command: ["python", "AI_Suite_test.py"]
+          env:
+            - name: PAAS_APP_NAME
+              value: ai-suite-test
+            - name: PAAS_NAMESPACE
+              value: default
+            - name: PAAS_PROJECT_ID
+              value: 074011d7be8a4eb59b065b9b4ae6d2e6
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+              nvidia.com/gpu: 1
+            limits:
+              cpu: 4000m
+              memory: 8000Mi
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: data-pvc
+              mountPath: /app/data
+      imagePullSecrets:
+        - name: default-secret
+      volumes:
+        - name: data-pvc
+          persistentVolumeClaim:
+            claimName: data-pvc
+      initContainers:
+        - name: git-clone
+          image: alpine/git:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              git clone --no-checkout https://github.com/CR0ZFP/Computer-vision-and-Image-processing.git /tmp/repo && \
+              cd /tmp/repo && \
+              git sparse-checkout init --cone && \
+              git sparse-checkout set agyikepek_4_osztaly && \
+              git checkout && \
+              cp -r agyikepek_4_osztaly/* /app/data
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 250m
+              memory: 512Mi
+          volumeMounts:
+            - name: data-pvc
+              mountPath: /app/data
+  completionMode: NonIndexed
