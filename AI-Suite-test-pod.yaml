@@ -58,7 +58,7 @@ spec:
               git sparse-checkout init --cone && \
               git sparse-checkout set agyikepek_4_osztaly && \
               git checkout && \
-              cp -r agyikepek_4_osztaly/* /app/data
+              cp -r agyikepek_4_osztaly /app/data
           resources:
             requests:
               cpu: 250m
