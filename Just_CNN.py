@@ -9,6 +9,7 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D,MaxPooling2D,Flatten,Dense,Dropout
+from tensorflow.keras.layers import BatchNormalization
 import time
 import tensorflow as tf
 import subprocess
@@ -75,34 +76,34 @@ def filter_images(original_train_images, original_test_images, train_labels):
 
 
 #Normalizing the pixel values to the range [0, 1]
-    filterd_train_images = np.array(filterd_train_images)/255.0
-    filtered_test_images = np.array(filtered_test_images)/255.0
+    filterd_train_images = np.array(filterd_train_images,dtype=np.float32)/255.0
+    filtered_test_images = np.array(filtered_test_images,dtype=np.float32)/255.0
 
     X =filterd_train_images
     y = train_labels
 
+    filterd_train_images, val_images, filtered_train_labels, val_labels = train_test_split(X,y, test_size=0.2, random_state=42)
 
-    return train_test_split(X,y, test_size=0.2, random_state=42), filtered_test_images
+
+    return filterd_train_images, val_images, filtered_train_labels, val_labels , filtered_test_images
 
 def create_cnn_model():
     model = Sequential([Conv2D(32,(3,3),activation="relu", input_shape=(256,256,1)),
+                        BatchNormalization(),
                         Conv2D(32,(3,3), activation="relu"),
                         MaxPooling2D(pool_size=(2,2)),
-                        Dropout(0.35),
+                        Dropout(0.25),
                         Conv2D(64,(3,3), activation="relu"),
+                        BatchNormalization(),
                         Conv2D(64,(3,3), activation="relu"),
                         MaxPooling2D(pool_size=(2,2)),
-                        Dropout(0.35),
+                        Dropout(0.25),
                         Conv2D(128,(3,3), activation="relu"),
+                        BatchNormalization(),
                         Conv2D(128,(3,3), activation="relu"),
                         MaxPooling2D(pool_size=(2,2)),
-                        Dropout(0.3),
-                        Conv2D(256,(3,3), activation="relu"),
-                        Conv2D(256,(3,3), activation="relu"),
-                        MaxPooling2D(pool_size=(2,2)),
-                        Dropout(0.3),
                         Flatten(),
-                        Dense(256, activation="relu"),
+                        Dense(128, activation="relu"),
                         Dropout(0.2),
                         Dense(4, activation="softmax")
                         ])
@@ -156,7 +157,7 @@ class TimeAndGpuMonitor(tf.keras.callbacks.Callback):
             self.model.stop_training = True
 
 def train_model(filterd_train_images, filtered_train_labels, val_images, val_labels, model):
-    history = model.fit (filterd_train_images,filtered_train_labels, validation_data=(val_images,val_labels), epochs=10000, batch_size=64, callbacks=[TimeAndGpuMonitor(max_seconds=3600)], verbose=1)
+    history = model.fit (filterd_train_images,filtered_train_labels, validation_data=(val_images,val_labels), epochs=10000, batch_size=64, callbacks=[TimeAndGpuMonitor(max_seconds=3600)], verbose=2)
     return history
 
 def main():
@@ -170,7 +171,7 @@ def main():
     model.compile (
         optimizer="adam",
         loss="sparse_categorical_crossentropy",
-        metrics = ["accuracy","validation_accuracy"]
+        metrics = ["accuracy"]
     )
     history = train_model(filterd_train_images, filtered_train_labels, val_images, val_labels, model)
     test_loss, test_accuracy = model.evaluate(test_images,test_labels, batch_size=64)
