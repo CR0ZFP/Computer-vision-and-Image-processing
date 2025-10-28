@@ -1,2 +1,3 @@
-AI-Suite-test.yaml
+AI-Suite-test-pod.yaml
+AI-Suite-test-job.yaml
 AI_Suite_test.py
