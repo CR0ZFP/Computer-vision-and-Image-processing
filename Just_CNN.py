@@ -176,3 +176,5 @@ def main():
     test_loss, test_accuracy = model.evaluate(test_images,test_labels, batch_size=64)
     print(f"test_loss: {test_loss}, test_accuracy: {test_accuracy}")
 
+if __name__ == "__main__":
+    main()
