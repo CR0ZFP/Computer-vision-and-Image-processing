@@ -6,13 +6,15 @@ metadata:
   labels:
     app: ai-suite-test
     version: v1
+  annotations:
+    sidecar.istio.io/inject: "false"
 spec:
   restartPolicy: OnFailure
   containers:
     - name: ai-suite-test-container
       image: 100.125.7.25:20202/container/ai-suite-test:v2
-      imagePullPolicy: IfNotPresent
-      command: ["python", "JustCNN.py"]
+      imagePullPolicy: Always
+      command: ["python", "Just_CNN.py"]
       env:
         - name: PAAS_APP_NAME
           value: ai-suite-test
@@ -27,7 +29,7 @@ spec:
           nvidia.com/gpu: 1
         limits:
           cpu: 4000m
-          memory: 8000Mi
+          memory: 16000Mi
           nvidia.com/gpu: 1
       volumeMounts:
         - name: data-pvc
